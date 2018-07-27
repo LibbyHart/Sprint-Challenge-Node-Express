@@ -8,6 +8,11 @@ const server = express();
 server.use(express.json());
 server.use(cors());
 
+const errorHandler = (status, message, res) => {
+    res.status(status).json({ error: message });
+    return;
+};
+
 //Action Endpoints
 
 //List of actions
@@ -19,8 +24,7 @@ server.get('/api/actions', (req, res) => {
         res.status(200).json(response);
     })
     .catch(error => {
-        res.status(500)
-        res.json({ error: "The action information could not be retrieved." })
+        errorHandler(500, "The action information could not be retrieved.", res);
     });
 });
 
@@ -38,8 +42,7 @@ server.get('/api/actions/:id', (req, res) => {
         res.json({ action })
     })
     .catch(error=> {
-        res.status(500)
-        res.json({ error: "The action information could not be retrieved." })
+        errorHandler(500, "The action information could not be retrieved.", res);
     });
 }
 });
@@ -49,13 +52,13 @@ server.get('/api/actions/:id', (req, res) => {
 server.post('/api/actions', (req, res) => {
     const { project_id, description, notes, completed } = req.body;
     actionM
-    .insert({ project_id, description, notes, completed })
+    .insert(req.body)
     .then(response => {
         res.status(200).json(response)
     })
     .catch(error=> {
-        res.status(500)
-        res.json({ error: "The action could not be added." })
+        errorHandler(500, "The action could not be added", res);
+
     });
 });
 
@@ -75,8 +78,7 @@ server.put('/api/actions/:id', (req, res) => {
         res.status(200).json(response)
     })
     .catch(error=> {
-        res.status(500)
-        res.json({ error: "The action information could not be updated." })
+        errorHandler(500, "The action information could not be updated.", res);
     });
 });
 
@@ -94,8 +96,7 @@ server.delete('/api/actions/:id', (req, res) => {
         res.status(200).json(response)
                 })
             .catch(error => {
-                res.status(500)
-                res.json({ error: "The action could not be removed" })
+                errorHandler(500, "The action information could not be removed.", res);
             });
 });
 
@@ -110,18 +111,92 @@ server.delete('/api/actions/:id', (req, res) => {
 //         res.status(200).json(response);
 //     })
 //     .catch(error => {
-//         res.status(500)
-//         res.json({ error: "The project information could not be retrieved." })
+//         errorHandler(500, "The project information could not be retrieved.", res);
 //     });
 // });
 
+server.get('/api/projects', (req, res) => {
+    projectM
+    .get()
+    .then(projects => {
+        res.json({ projects });
+    })
+    .catch(error => {
+        errorHandler(500, "The project information could not be retrieved.", res);
+    });
+});
+
 //Get by ID
+
+server.get('/api/projects/:id', (req, res) => {
+    const { id } = req.params;
+    if(!id) {
+        res.status(404);
+        res.json({ error: "That project ID does not exist" })
+        } else {
+    projectM
+    .get(id)
+    .then(project => {
+        res.json({ project })
+    })
+    .catch(error=> {
+        errorHandler(500, "The project information could not be retrieved.", res);
+    });
+}
+});
 
 //Insert Project
 
+server.post('/api/projects', (req, res) => {
+    const { name, description, completed } = req.body;
+    projectM
+    .insert(req.body)
+    .then(response => {
+        res.status(200).json(response)
+    })
+    .catch(error=> {
+        errorHandler(500, "The project could not be added", res);
+
+    });
+});
+
 //Update Project
 
+server.put('/api/projects/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, description, completed } = req.body;
+
+    if(!name || !description) {
+        res.status(404);
+        res.json({ error: "Please name your project." })
+    }
+    projectM
+    .update(id, req.body)
+    .then(response => {
+        res.status(200).json(response)
+    })
+    .catch(error=> {
+        errorHandler(500, "The project information could not be updated.", res);
+    });
+});
+
 //Delete Project
+
+server.delete('/api/projects/:id', (req, res) => {
+    const { id } = req.params;
+    if(!id) {
+        res.status(404)
+        res.json({ error: "The project with the specified ID does not exist." })
+        }
+    projectM
+    .remove(id)
+    .then(response => {
+        res.status(200).json(response)
+                })
+            .catch(error => {
+                errorHandler(500, "The project information could not be removed.", res);
+            });
+});
 
 //Project ID returns Actions
 
