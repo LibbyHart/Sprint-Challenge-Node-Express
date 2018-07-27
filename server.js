@@ -52,7 +52,7 @@ server.get('/api/actions/:id', (req, res) => {
 server.post('/api/actions', (req, res) => {
     const { project_id, description, notes, completed } = req.body;
     actionM
-    .insert(req.body)
+    .insert({ project_id, description, notes, completed })
     .then(response => {
         res.status(200).json(response)
     })
@@ -73,7 +73,7 @@ server.put('/api/actions/:id', (req, res) => {
         res.json({ error: "The action with the specified ID does not exist." })
     }
     actionM
-    .update(id, req.body)
+    .update(id, { description, notes, completed })
     .then(response => {
         res.status(200).json(response)
     })
@@ -103,17 +103,6 @@ server.delete('/api/actions/:id', (req, res) => {
 //Project Endpoints
 
 //List of projects
-
-// server.get('/api/projects', (req, res) => {
-//     projectM
-//     .get()
-//     .then(response => {
-//         res.status(200).json(response);
-//     })
-//     .catch(error => {
-//         errorHandler(500, "The project information could not be retrieved.", res);
-//     });
-// });
 
 server.get('/api/projects', (req, res) => {
     projectM
@@ -150,7 +139,7 @@ server.get('/api/projects/:id', (req, res) => {
 server.post('/api/projects', (req, res) => {
     const { name, description, completed } = req.body;
     projectM
-    .insert(req.body)
+    .insert({ name, description, completed })
     .then(response => {
         res.status(200).json(response)
     })
@@ -171,7 +160,7 @@ server.put('/api/projects/:id', (req, res) => {
         res.json({ error: "Please name your project." })
     }
     projectM
-    .update(id, req.body)
+    .update(id, { name, description, completed })
     .then(response => {
         res.status(200).json(response)
     })
@@ -199,5 +188,17 @@ server.delete('/api/projects/:id', (req, res) => {
 });
 
 //Project ID returns Actions
+
+server.get('/api/projects/:id/actions', (req, res) => {
+    const { id } = req.params;
+    projectM
+    .getProjectActions(id)
+    .then(actions => {
+        res.json({ actions })
+    })
+    .catch(error => {
+        errorHandler(500, "The project actions could not be retrieved.", res);
+    });
+});
 
 server.listen(port, () => console.log('API running...'))
